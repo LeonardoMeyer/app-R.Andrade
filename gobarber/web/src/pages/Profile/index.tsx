@@ -1,16 +1,18 @@
-import React, { useCallback, useRef, ChangeEvent } from 'react';
+import React, { useCallback, useRef, ChangeEvent, useMemo } from 'react';
 import {
   FiMail,
   FiUser,
   FiLock,
   FiCamera,
   FiArrowLeft,
-  FiMinimize,
+  FiHash,
+  FiCalendar,
 } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
 import { useHistory, Link } from 'react-router-dom';
+import { format, parseISO } from 'date-fns';
 
 import api from '../../services/api';
 
@@ -25,8 +27,11 @@ import { Container, Content, AvatarInput } from './styles';
 import { useAuth } from '../../hooks/auth';
 
 interface ProfileFormData {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  cpf: string;
+  birth_date: string;
   old_password: string;
   password: string;
   password_confirmation: string;
@@ -44,10 +49,13 @@ const Profile: React.FC = () => {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          name: Yup.string().required('Nome obrigatório'),
+          first_name: Yup.string().required('Nome obrigatório'),
+          last_name: Yup.string().required('Sobrenome obrigatório'),
           email: Yup.string()
             .required('Email obrigatório')
             .email('Digite um e-mail válido'),
+          cpf: Yup.string().required('CPF obrigatório'),
+          birth_date: Yup.string().required('Data de nascimento obrigatória'),
           old_password: Yup.string(),
           password: Yup.string().when('old_password', {
             is: val => !!val.length,
@@ -66,16 +74,23 @@ const Profile: React.FC = () => {
         await schema.validate(data, { abortEarly: false });
 
         const {
-          name,
+          first_name,
+          last_name,
           email,
+          cpf,
+          birth_date,
           old_password,
           password,
           password_confirmation,
         } = data;
 
         const formData = {
-          name,
+          name: `${first_name} ${last_name}`.trim(),
+          first_name,
+          last_name,
           email,
+          cpf,
+          birth_date,
           ...(old_password
             ? {
                 old_password,
@@ -135,6 +150,14 @@ const Profile: React.FC = () => {
     [addToast, updateUser],
   );
 
+  const birthDateValue = useMemo(() => {
+    if (!user.birth_date) {
+      return undefined;
+    }
+
+    return format(parseISO(user.birth_date), 'yyyy-MM-dd');
+  }, [user.birth_date]);
+
   return (
     <Container>
       <header>
@@ -149,8 +172,11 @@ const Profile: React.FC = () => {
         <Form
           ref={formRef}
           initialData={{
-            name: user.name,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
+            cpf: user.cpf,
+            birth_date: birthDateValue,
           }}
           onSubmit={handleSubmit}
         >
@@ -164,9 +190,18 @@ const Profile: React.FC = () => {
           </AvatarInput>
 
           <h1>Meu perfil</h1>
+          {user.age !== undefined && <span>Idade: {user.age} anos</span>}
 
-          <Input name="name" icon={FiUser} placeholder="Nome" />
+          <Input name="first_name" icon={FiUser} placeholder="Nome" />
+          <Input name="last_name" icon={FiUser} placeholder="Sobrenome" />
           <Input name="email" icon={FiMail} placeholder="E-mail" />
+          <Input name="cpf" icon={FiHash} placeholder="CPF" />
+          <Input
+            name="birth_date"
+            icon={FiCalendar}
+            type="date"
+            placeholder="Nascimento"
+          />
 
           <Input
             containerStyle={{ marginTop: 24 }}

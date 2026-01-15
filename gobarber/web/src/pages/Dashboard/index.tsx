@@ -35,6 +35,7 @@ interface Appointment {
   user: {
     name: string;
     avatar_url: string;
+    age?: number;
   };
 }
 
@@ -72,8 +73,13 @@ const Dashboard: React.FC = () => {
   }, [currentMonth, user.id]);
 
   useEffect(() => {
+    const appointmentsEndpoint =
+      user.role === 'psychologist'
+        ? '/psychologists/appointments'
+        : '/appointments/me';
+
     api
-      .get<Appointment[]>('/appointments/me', {
+      .get<Appointment[]>(appointmentsEndpoint, {
         params: {
           year: selectedDate.getFullYear(),
           month: selectedDate.getMonth() + 1,
@@ -89,7 +95,7 @@ const Dashboard: React.FC = () => {
         });
         setAppointments(appointmentsFormatted);
       });
-  }, [selectedDate]);
+  }, [selectedDate, user.role]);
 
   const disabledDays = useMemo(() => {
     const dates = monthAvailability
@@ -175,6 +181,9 @@ const Dashboard: React.FC = () => {
                 />
 
                 <strong>{nextAppointment?.user.name}</strong>
+                {nextAppointment?.user.age !== undefined && (
+                  <small>{nextAppointment?.user.age} anos</small>
+                )}
                 <span>
                   <FiClock />
                   {nextAppointment?.hourFormatted}
@@ -203,6 +212,9 @@ const Dashboard: React.FC = () => {
                     alt={appointment.user.name}
                   />
                   <strong>{appointment.user.name}</strong>
+                  {appointment.user.age !== undefined && (
+                    <small>{appointment.user.age} anos</small>
+                  )}
                 </div>
               </Appointment>
             ))}
@@ -228,6 +240,9 @@ const Dashboard: React.FC = () => {
                     alt={appointment.user.name}
                   />
                   <strong>{appointment.user.name}</strong>
+                  {appointment.user.age !== undefined && (
+                    <small>{appointment.user.age} anos</small>
+                  )}
                 </div>
               </Appointment>
             ))}

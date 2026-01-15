@@ -10,7 +10,11 @@ import User from '../infra/typeorm/entities/User';
 interface IRequest {
   user_id: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
+  cpf?: string;
+  birth_date?: Date;
   old_password?: string;
   password?: string;
 }
@@ -28,7 +32,11 @@ class UpdateProfileService {
   public async execute({
     user_id,
     name,
+    first_name,
+    last_name,
     email,
+    cpf,
+    birth_date,
     old_password,
     password,
   }: IRequest): Promise<User> {
@@ -45,7 +53,11 @@ class UpdateProfileService {
     }
 
     user.name = name;
+    user.first_name = first_name || user.first_name;
+    user.last_name = last_name || user.last_name;
     user.email = email;
+    user.cpf = cpf || user.cpf;
+    user.birth_date = birth_date || user.birth_date;
 
     if (password && !old_password) {
       throw new AppError(

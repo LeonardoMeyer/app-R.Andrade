@@ -5,7 +5,13 @@ interface User {
   id: string;
   avatar_url: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
+  cpf?: string;
+  birth_date?: string;
+  age?: number;
   email: string;
+  role?: 'client' | 'psychologist';
 }
 
 interface AuthState {

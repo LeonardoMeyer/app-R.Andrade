@@ -45,6 +45,12 @@ export const Content = styled.div`
       text-align: left;
     }
 
+    span {
+      text-align: left;
+      margin-bottom: 16px;
+      color: #f4ede8;
+    }
+
     a {
       color: #f4ede8;
       display: block;
