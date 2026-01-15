@@ -1,5 +1,12 @@
 import React, { useCallback, useRef } from 'react';
-import { FiArrowLeft, FiMail, FiUser, FiLock } from 'react-icons/fi';
+import {
+  FiArrowLeft,
+  FiMail,
+  FiUser,
+  FiLock,
+  FiHash,
+  FiCalendar,
+} from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
@@ -19,8 +26,11 @@ import Button from '../../components/Button';
 import { Container, Content, Background, AnimationContainer } from './styles';
 
 interface SignUpFormData {
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
+  cpf: string;
+  birth_date: string;
   password: string;
 }
 
@@ -35,16 +45,29 @@ const SignUp: React.FC = () => {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          name: Yup.string().required('Nome obrigatório'),
+          first_name: Yup.string().required('Nome obrigatório'),
+          last_name: Yup.string().required('Sobrenome obrigatório'),
           email: Yup.string()
             .required('Email obrigatório')
             .email('Digite um e-mail válido'),
+          cpf: Yup.string().required('CPF obrigatório'),
+          birth_date: Yup.string().required('Data de nascimento obrigatória'),
           password: Yup.string().min(6, 'No mínimo 6 dígitos'),
         });
 
         await schema.validate(data, { abortEarly: false });
 
-        await api.post('/users', data);
+        const { first_name, last_name, email, cpf, birth_date, password } = data;
+
+        await api.post('/users', {
+          name: `${first_name} ${last_name}`.trim(),
+          first_name,
+          last_name,
+          email,
+          cpf,
+          birth_date,
+          password,
+        });
 
         history.push('/');
 
@@ -82,8 +105,16 @@ const SignUp: React.FC = () => {
           <Form ref={formRef} onSubmit={handleSubmit}>
             <h1>Faça seu cadastro</h1>
 
-            <Input name="name" icon={FiUser} placeholder="Nome" />
+            <Input name="first_name" icon={FiUser} placeholder="Nome" />
+            <Input name="last_name" icon={FiUser} placeholder="Sobrenome" />
             <Input name="email" icon={FiMail} placeholder="E-mail" />
+            <Input name="cpf" icon={FiHash} placeholder="CPF" />
+            <Input
+              name="birth_date"
+              icon={FiCalendar}
+              type="date"
+              placeholder="Nascimento"
+            />
             <Input
               name="password"
               icon={FiLock}

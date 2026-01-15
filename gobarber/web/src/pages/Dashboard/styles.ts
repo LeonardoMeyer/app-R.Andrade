@@ -142,6 +142,11 @@ export const NextAppointment = styled.div`
       color: #fff;
     }
 
+    small {
+      margin-left: 12px;
+      color: #999591;
+    }
+
     span {
       margin-left: auto;
       display: flex;
@@ -214,6 +219,12 @@ export const Appointment = styled.div`
       margin-left: 24px;
       color: #fff;
       font-size: 20px;
+    }
+
+    small {
+      margin-left: 12px;
+      color: #999591;
+      font-size: 14px;
     }
   }
 `;
