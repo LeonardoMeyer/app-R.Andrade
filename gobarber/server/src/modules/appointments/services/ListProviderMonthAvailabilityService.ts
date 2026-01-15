@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import { getDaysInMonth, getDate, isAfter } from 'date-fns';
 
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
+import IProviderSchedulesRepository from '@modules/appointments/repositories/IProviderSchedulesRepository';
 
 interface IRequest {
   provider_id: string;
@@ -19,6 +20,9 @@ class ListProviderMonthAvailabilityService {
   constructor(
     @inject('AppointmentsRepository')
     private appointmentsRepository: IAppointmentsRepository,
+
+    @inject('ProviderSchedulesRepository')
+    private providerSchedulesRepository: IProviderSchedulesRepository,
   ) {}
 
   public async execute({
@@ -27,6 +31,14 @@ class ListProviderMonthAvailabilityService {
     month,
   }: IRequest): Promise<IResponse> {
     const appointments = await this.appointmentsRepository.findAllInMonthFromProvider(
+      {
+        provider_id,
+        year,
+        month,
+      },
+    );
+
+    const schedules = await this.providerSchedulesRepository.findAllInMonthFromProvider(
       {
         provider_id,
         year,
@@ -48,11 +60,31 @@ class ListProviderMonthAvailabilityService {
         return getDate(appointment.date) === day;
       });
 
+      const schedulesInDay = schedules.filter(schedule => {
+        return getDate(schedule.date) === day;
+      });
+
+      const defaultHoursCount = 8;
+      const availableHours = new Set<number>(
+        Array.from({ length: defaultHoursCount }, (_, index) => index + 12),
+      );
+
+      schedulesInDay.forEach(schedule => {
+        const scheduleHour = schedule.date.getHours();
+
+        if (schedule.status === 'available') {
+          availableHours.add(scheduleHour);
+          return;
+        }
+
+        availableHours.delete(scheduleHour);
+      });
+
       return {
         day,
         available:
           isAfter(compareDate, new Date(Date.now())) &&
-          appointmentsInDay.length < 10,
+          appointmentsInDay.length < availableHours.size,
       };
     });
 
