@@ -3,6 +3,7 @@ import { getHours, isAfter } from 'date-fns';
 
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
 import IProviderSchedulesRepository from '@modules/appointments/repositories/IProviderSchedulesRepository';
+import Appointment from '@modules/appointments/infra/typeorm/entities/Appointment';
 
 interface IRequest {
   provider_id: string;
@@ -14,10 +15,11 @@ interface IRequest {
 type IResponse = Array<{
   hour: number;
   available: boolean;
+  appointment: Appointment | null;
 }>;
 
 @injectable()
-class ListProviderDayAvailabilityService {
+class ListProviderDayScheduleService {
   constructor(
     @inject('AppointmentsRepository')
     private appointmentsRepository: IAppointmentsRepository,
@@ -51,7 +53,6 @@ class ListProviderDayAvailabilityService {
     );
 
     const defaultHours = Array.from({ length: 8 }, (_, index) => index + 12);
-
     const availableHours = new Set<number>(defaultHours);
 
     schedules.forEach(schedule => {
@@ -66,25 +67,22 @@ class ListProviderDayAvailabilityService {
     });
 
     const eachHourArray = Array.from(availableHours).sort((a, b) => a - b);
-
     const currentDate = new Date(Date.now());
 
-    const availability = eachHourArray.map(hour => {
-      const hasAppointmentInHour = appointments.find(
-        appointment => getHours(appointment.date) === hour,
+    return eachHourArray.map(hour => {
+      const appointment = appointments.find(
+        appointmentItem => getHours(appointmentItem.date) === hour,
       );
 
       const appointmentDate = new Date(year, month - 1, day, hour);
 
       return {
         hour,
-        available:
-          !hasAppointmentInHour && isAfter(appointmentDate, currentDate),
+        available: !appointment && isAfter(appointmentDate, currentDate),
+        appointment: appointment || null,
       };
     });
-
-    return availability;
   }
 }
 
-export default ListProviderDayAvailabilityService;
+export default ListProviderDayScheduleService;

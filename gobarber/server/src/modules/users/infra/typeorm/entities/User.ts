@@ -8,6 +8,7 @@ import {
 
 import uploadConfig from '@config/upload';
 import { Exclude, Expose } from 'class-transformer';
+import { differenceInYears } from 'date-fns';
 
 @Entity('users')
 class User {
@@ -16,6 +17,18 @@ class User {
 
   @Column()
   name: string;
+
+  @Column({ nullable: true })
+  first_name: string;
+
+  @Column({ nullable: true })
+  last_name: string;
+
+  @Column({ nullable: true })
+  cpf: string;
+
+  @Column({ type: 'date', nullable: true })
+  birth_date: Date;
 
   @Column()
   email: string;
@@ -50,6 +63,15 @@ class User {
       default:
         return null;
     }
+  }
+
+  @Expose({ name: 'age' })
+  getAge(): number | null {
+    if (!this.birth_date) {
+      return null;
+    }
+
+    return differenceInYears(new Date(), this.birth_date);
   }
 }
 

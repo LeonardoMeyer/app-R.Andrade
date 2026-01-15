@@ -5,6 +5,8 @@ import './providers';
 
 import IAppointmentsRepository from '@modules/appointments/repositories/IAppointmentsRepository';
 import AppointmentsRepository from '@modules/appointments/infra/typeorm/repositories/AppointmentsRepository';
+import IProviderSchedulesRepository from '@modules/appointments/repositories/IProviderSchedulesRepository';
+import ProviderSchedulesRepository from '@modules/appointments/infra/typeorm/repositories/ProviderSchedulesRepository';
 
 import IUsersRepository from '@modules/users/repositories/IUsersRepository';
 import UsersRepository from '@modules/users/infra/typeorm/repositories/UsersRepository';
@@ -18,6 +20,11 @@ import NotificationsRepository from '@modules/notifications/infra/typeorm/reposi
 container.registerSingleton<IAppointmentsRepository>(
   'AppointmentsRepository',
   AppointmentsRepository,
+);
+
+container.registerSingleton<IProviderSchedulesRepository>(
+  'ProviderSchedulesRepository',
+  ProviderSchedulesRepository,
 );
 
 container.registerSingleton<IUsersRepository>(

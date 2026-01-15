@@ -6,6 +6,8 @@ import AppError from '@shared/errors/AppError';
 import ICacheProvider from '@shared/container/providers/CacheProvider/models/ICacheProvider';
 import INotificationsRepository from '@modules/notifications/repositories/INotificationsRepository';
 import IAppointmentsRepository from '../repositories/IAppointmentsRepository';
+import IProviderSchedulesRepository from '../repositories/IProviderSchedulesRepository';
+import IUsersRepository from '@modules/users/repositories/IUsersRepository';
 
 import Appointment from '../infra/typeorm/entities/Appointment';
 
@@ -20,6 +22,12 @@ class CreateAppointmentService {
   constructor(
     @inject('AppointmentsRepository')
     private appointmentsRepository: IAppointmentsRepository,
+
+    @inject('ProviderSchedulesRepository')
+    private providerSchedulesRepository: IProviderSchedulesRepository,
+
+    @inject('UsersRepository')
+    private usersRepository: IUsersRepository,
 
     @inject('NotificationsRepository')
     private notificationsRepository: INotificationsRepository,
@@ -43,10 +51,31 @@ class CreateAppointmentService {
       throw new AppError("You can't create an appointment with yourself.");
     }
 
-    if (getHours(appointmentDate) < 8 || getHours(appointmentDate) > 17) {
-      throw new AppError(
-        'You can only create appointments between 8am and 5pm',
-      );
+    const provider = await this.usersRepository.findById(provider_id);
+    const user = await this.usersRepository.findById(user_id);
+
+    if (!provider || provider.role !== 'psychologist') {
+      throw new AppError('Selected provider is not a psychologist.');
+    }
+
+    if (!user || user.role !== 'client') {
+      throw new AppError('Only clients can create appointments.');
+    }
+
+    const appointmentHour = getHours(appointmentDate);
+    const isDefaultHour = appointmentHour >= 12 && appointmentHour <= 19;
+
+    const schedule = await this.providerSchedulesRepository.findByDate(
+      appointmentDate,
+      provider_id,
+    );
+
+    const isSlotAvailable = schedule
+      ? schedule.status === 'available'
+      : isDefaultHour;
+
+    if (!isSlotAvailable) {
+      throw new AppError('This appointment time is not available.');
     }
 
     const findAppointmentInSameDate = await this.appointmentsRepository.findByDate(
@@ -62,6 +91,7 @@ class CreateAppointmentService {
       user_id,
       provider_id,
       date: appointmentDate,
+      status: 'pending',
     });
 
     const formattedDate = format(appointmentDate, "dd/MM/yyyy 'às' HH:mm");

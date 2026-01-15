@@ -10,8 +10,8 @@ import {
 
 import User from '@modules/users/infra/typeorm/entities/User';
 
-@Entity('appointments')
-class Appointment {
+@Entity('provider_schedules')
+class ProviderSchedule {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -22,18 +22,11 @@ class Appointment {
   @JoinColumn({ name: 'provider_id' })
   provider: User;
 
-  @Column()
-  user_id: string;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_id' })
-  user: User;
-
   @Column('timestamp with time zone')
   date: Date;
 
-  @Column({ default: 'pending' })
-  status: 'pending' | 'accepted' | 'cancelled';
+  @Column({ default: 'available' })
+  status: 'available' | 'unavailable';
 
   @CreateDateColumn()
   created_at: Date;
@@ -42,4 +35,4 @@ class Appointment {
   updated_at: Date;
 }
 
-export default Appointment;
+export default ProviderSchedule;
